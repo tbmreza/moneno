@@ -1,30 +1,45 @@
-Tree-sitter grammar for utlc: a subset of Scheme that's [restricted](https://sites.ualberta.ca/~jhoover/325/CourseNotes/section/Scheme_1.htm), but enough to facilitate programming in the untyped lambda-calculus.
+# moneno
 
-## Status
+## Prerequisites
+- `uv` installed
+- `uv tool update-shell` run once (puts `~/.local/bin` on PATH for bash/fish/zsh), then restart the shell
+- WSL: clone into the Linux filesystem (`~/`), not `/mnt/c/...`
 
-Work in progress. Repository used tree-sitter-rust as scaffold, so maybe look at that instead.
-
-## Developing the grammar
-
-Extending this simple language to a RnRS Scheme subset is something that I want to do sometime (or maybe you do today).
-I think it's worthwhile to write a proper documentation here.
-
-### Use cargo installed tree-sitter binary!
-
-Following steps in tree-sitter docs exactly did confuse me. Instead of using npm as advised there, I suggest using the binary installed at `~/.cargo/bin/tree-sitter`.
-My experience using npm:
-- Dependencies got displaced from `package.json` after invoking `tree-sitter generate`.
-- `tree-sitter generate` can only run once; you have to `npm init` all over again if you decide that you have changes to `grammar.js`. This is a bug because docs says otherwise.
-
-### Tests
+## Quickstart
+```bash
+git clone <repo-url>
+cd moneno
+make setup
+moneno-x --install-completion   # optional: tab-complete experiment names
 ```
-tree-sitter test -f <testcase name, not filename>  # providing it with a filter that doesn't catch anything might surprise you
-tree-sitter test  # reads test/corpus/*
+Changes in `src/` take effect immediately (editable install). After pulling a new official tool, re-run `make setup`.
+
+## Tools
+| Command | Purpose | Example |
+|---|---|---|
+| `pdf-merge` | Merge PDFs | `pdf-merge a.pdf b.pdf -o out.pdf` |
+| `docx-images` | Extract original-quality images from a .docx | `docx-images report.docx -o imgs/` |
+| `moneno-x` | Run any experimental script | `moneno-x sample_experiment` |
+
+## Experiment
+```bash
+moneno-x --new my_idea      # creates src/moneno/experimental/my_idea.py
+moneno-x my_idea            # run it
+moneno-x                    # list all experiments
+```
+- Rules: one self-contained file; unique name (prefix your handle if unsure); don't import other experiments.
+- Need a package? `uv add --optional experimental <pkg>`, then `make setup`. Commit `pyproject.toml` and `uv.lock`. If it won't resolve, don't push.
+- Push freely. Nothing here is listed in `[project.scripts]` or installed as its own command.
+
+## Promote to the team CLI
+1. Move logic from `experimental/` into `src/moneno/<tool>.py` with a Typer `app`.
+2. Add one line under `[project.scripts]` in `pyproject.toml`.
+3. Run `make setup`.
+
+## Develop and test
+```bash
+make test
 ```
 
-### Simple usage
-```
-# edit rules at grammar.js
-tree-sitter generate  # expect modifications at src/grammar.json
-tree-sitter parse example-file
-```
+## Uninstall
+`make uninstall`
