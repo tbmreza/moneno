@@ -93,7 +93,7 @@ def test_no_images_exit_1(tmp_path: Path) -> None:
     result = runner.invoke(app, [str(docx), "-o", str(tmp_path / "out")])
 
     assert result.exit_code == 1
-    assert "no images" in result.output
+    assert "no images" in " ".join(result.output.split())
 
 
 def test_non_zip_exit_1(tmp_path: Path) -> None:
