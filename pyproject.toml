@@ -12,7 +12,7 @@ dependencies = [
 [project.scripts]
 pdf-merge = "moneno.pdf_merge:app"
 docx-images = "moneno.docx_images:app"
-moneno-x = "moneno.launcher:app"
+moneno-x = "moneno.launcher:cli"
 
 [project.optional-dependencies]
 experimental = []

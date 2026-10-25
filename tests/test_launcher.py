@@ -74,3 +74,21 @@ def test_new_scaffolds(tmp_path: Path, monkeypatch) -> None:
     assert path.exists()
     assert "def main()" in path.read_text()
     assert "my_idea" in result.output
+
+
+def test_cli_argument_forwarding(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(launcher, "experiments_dir", lambda: tmp_path)
+    _write(tmp_path / "exp.py", 'import sys\nif __name__ == "__main__": print("ARGS:", sys.argv[1:])\n')
+
+    monkeypatch.setattr("sys.argv", ["moneno-x", "exp", "--help", "-v"])
+    called = False
+
+    def fake_run(name, args):
+        nonlocal called
+        assert name == "exp"
+        assert args == ["--help", "-v"]
+        called = True
+
+    monkeypatch.setattr(launcher, "_run", fake_run)
+    launcher.cli()
+    assert called

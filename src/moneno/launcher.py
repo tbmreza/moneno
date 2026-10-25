@@ -96,7 +96,7 @@ def _run(name: str, args: List[str]) -> None:
         suggestions = difflib.get_close_matches(name, sorted(known), n=3, cutoff=0.5)
         if suggestions:
             err_console.print("Did you mean: " + ", ".join(suggestions) + "?")
-        raise typer.Exit(2)
+        raise sys.exit(2)
 
     sys.argv = [name, *args]
     try:
@@ -107,7 +107,7 @@ def _run(name: str, args: List[str]) -> None:
             raise
         err_console.print(f"[red]Missing dependency '{missing}'.[/red]")
         err_console.print(f"Run: uv add --optional experimental {missing} && make setup")
-        raise typer.Exit(1)
+        raise sys.exit(1)
 
 
 def _list() -> None:
@@ -151,5 +151,16 @@ def main(
         _run(name, list(ctx.args))
 
 
-if __name__ == "__main__":
+def cli() -> None:
+    """CLI entrypoint that inspects sys.argv to forward flags to experiments."""
+    args = sys.argv[1:]
+    if args and not args[0].startswith("-"):
+        known = {n for n, _ in discover(experiments_dir())}
+        if args[0] in known or (args[0] != "--help" and NAME_RE.match(args[0])):
+            _run(args[0], args[1:])
+            return
     app()
+
+
+if __name__ == "__main__":
+    cli()
