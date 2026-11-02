@@ -15,7 +15,10 @@ docx-images = "moneno.docx_images:app"
 moneno-x = "moneno.launcher:cli"
 
 [project.optional-dependencies]
-experimental = []
+experimental = [
+    "pillow>=12.3.0",
+    "zxing-cpp>=3.1.1",
+]
 
 [dependency-groups]
 dev = ["pytest"]

@@ -39,6 +39,7 @@ moneno-x                    # list all experiments
 ## Develop and test
 ```bash
 make test
+uvx schemathesis run ./root.openapi.yaml --url=http:// 2>&1 | tee new.log
 ```
 
 ## Uninstall

@@ -6,3 +6,4 @@ dist/
 build/
 *.pdf
 !tests/fixtures/*.pdf
+.schemathesis/default/cache/crashes/*.json
