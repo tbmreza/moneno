@@ -19,6 +19,43 @@ err_console = Console(stderr=True)
 
 NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 
+# Import name -> PyPI distribution name, for modules where the two differ.
+# Used only to print a correct `uv add` hint when an experiment's import fails.
+IMPORT_TO_PACKAGE = {
+    "PIL": "pillow",
+    "zxingcpp": "zxing-cpp",
+    "cv2": "opencv-python",
+    "yaml": "pyyaml",
+    "sklearn": "scikit-learn",
+    "bs4": "beautifulsoup4",
+    "dateutil": "python-dateutil",
+    "docx": "python-docx",
+    "fitz": "pymupdf",
+}
+
+
+def package_for_import(module: str) -> str:
+    """Best-guess PyPI name for a missing top-level *module*."""
+    top = module.split(".")[0]
+    return IMPORT_TO_PACKAGE.get(top, top)
+
+
+def suggest(name: str, known: List[str]) -> List[str]:
+    """Return up to 3 likely intended experiment names for a mistyped *name*."""
+    prefix = [k for k in known if k.startswith(name) or name.startswith(k)]
+    # Compare against the leading part too, so "sampel" finds "sample_experiment".
+    fuzzy = [
+        k
+        for k in known
+        if difflib.SequenceMatcher(None, name, k).ratio() >= 0.5
+        or difflib.SequenceMatcher(None, name, k[: len(name)]).ratio() >= 0.8
+    ]
+    seen: List[str] = []
+    for k in prefix + fuzzy:
+        if k not in seen:
+            seen.append(k)
+    return seen[:3]
+
 TEMPLATE = '''"""{name}: one-line summary."""
 
 import sys
@@ -93,7 +130,7 @@ def _run(name: str, args: List[str]) -> None:
     known = {n for n, _ in discover(directory)}
     if name not in known:
         err_console.print(f"[red]Unknown experiment: {name!r}[/red]")
-        suggestions = difflib.get_close_matches(name, sorted(known), n=3, cutoff=0.5)
+        suggestions = suggest(name, sorted(known))
         if suggestions:
             err_console.print("Did you mean: " + ", ".join(suggestions) + "?")
         raise sys.exit(2)
@@ -105,8 +142,9 @@ def _run(name: str, args: List[str]) -> None:
         missing = exc.name or ""
         if missing.startswith("moneno."):
             raise
+        package = package_for_import(missing)
         err_console.print(f"[red]Missing dependency '{missing}'.[/red]")
-        err_console.print(f"Run: uv add --optional experimental {missing} && make setup")
+        err_console.print(f"Run: uv add --optional experimental {package} && make setup")
         raise sys.exit(1)
 
 
