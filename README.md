@@ -19,7 +19,7 @@ Changes in `src/` take effect immediately (editable install). After pulling a ne
 |---|---|---|
 | `pdf-merge` | Merge PDFs | `pdf-merge a.pdf b.pdf -o out.pdf` |
 | `docx-images` | Extract original-quality images from a .docx | `docx-images report.docx -o imgs/` |
-| `moneno-x` | Run any experimental script | `moneno-x sample_experiment` |
+| `moneno-x` | Run any experimental script | `moneno-x qr_string code.png` |
 
 ## Experiment
 ```bash
@@ -39,7 +39,12 @@ moneno-x                    # list all experiments
 ## Develop and test
 ```bash
 make test
-uvx schemathesis run ./root.openapi.yaml --url=http:// 2>&1 | tee new.log
+```
+
+## Exploration notes (not part of moneno)
+One-off: [Schemathesis](https://schemathesis.readthedocs.io/) was tried for fuzzing an HTTP API against its OpenAPI spec. It is not a moneno tool or a moneno test, and the spec is not in this repo. `.schemathesis/` is its local cache.
+```bash
+uvx schemathesis run ./root.openapi.yaml --url=http://<host> 2>&1 | tee new.log
 ```
 
 ## Uninstall

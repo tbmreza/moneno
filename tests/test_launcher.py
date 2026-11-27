@@ -92,3 +92,34 @@ def test_cli_argument_forwarding(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(launcher, "_run", fake_run)
     launcher.cli()
     assert called
+
+
+def test_package_for_import_maps_known_mismatches() -> None:
+    assert launcher.package_for_import("zxingcpp") == "zxing-cpp"
+    assert launcher.package_for_import("PIL") == "pillow"
+    assert launcher.package_for_import("PIL.Image") == "pillow"
+    assert launcher.package_for_import("requests") == "requests"
+
+
+def test_missing_dependency_hint_uses_package_name(tmp_path: Path, monkeypatch, capsys) -> None:
+    monkeypatch.setattr(launcher, "experiments_dir", lambda: tmp_path)
+    _write(tmp_path / "needs_qr.py", '"""Needs a missing dep."""\n')
+
+    def fake_run_module(*_a, **_k):
+        raise ModuleNotFoundError("No module named 'zxingcpp'", name="zxingcpp")
+
+    monkeypatch.setattr(launcher.runpy, "run_module", fake_run_module)
+    try:
+        launcher._run("needs_qr", [])
+    except SystemExit as exc:
+        assert exc.code == 1
+    err = capsys.readouterr().err
+    assert "uv add --optional experimental zxing-cpp" in err
+
+
+def test_suggest_finds_transposed_prefix() -> None:
+    known = ["qr_string", "sample_experiment"]
+    assert launcher.suggest("sampel", known)[0] == "sample_experiment"
+    assert launcher.suggest("sample_experimnt", known)[0] == "sample_experiment"
+    assert launcher.suggest("qr", known)[0] == "qr_string"
+    assert launcher.suggest("zzzz", known) == []
